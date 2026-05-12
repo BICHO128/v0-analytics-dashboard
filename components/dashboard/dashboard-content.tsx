@@ -217,7 +217,7 @@ export function DashboardContent() {
                       {data.isDemo ? 'Modo demo' : 'Supabase conectado'}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Variables: NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.
+                      Rapidez de respuesta y persistencia de datos garantizadas.
                     </p>
                   </div>
                   <div className="rounded-lg border border-border/50 bg-muted/30 p-4">

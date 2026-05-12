@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
 } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { ConsultaPorTipo, CorreosPorDia } from '@/lib/types'
@@ -19,13 +20,42 @@ interface ChartsProps {
   correosPorDia: CorreosPorDia[]
 }
 
-// Tooltip personalizado estilizado
-function TooltipPersonalizado({ 
-  active, 
-  payload, 
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+/** Trunca un string y añade "…" si supera maxLen caracteres */
+function truncar(text: string, maxLen = 22): string {
+  if (!text) return ''
+  const str = String(text)
+  return str.length > maxLen ? str.slice(0, maxLen) + '…' : str
+}
+
+/** Extrae el nombre limpio del tipo (limpia JSON/objetos si los hay) */
+function limpiarTipo(raw: string): string {
+  if (!raw) return ''
+  const str = String(raw).trim()
+  // Si parece JSON o contiene comillas/llaves, intenta parsear
+  if (str.startsWith('{') || str.startsWith('"')) {
+    try {
+      const parsed = JSON.parse(str)
+      // Busca campos comunes de nombre
+      const nombre =
+        parsed?.tipo || parsed?.nombre || parsed?.name || parsed?.categoria || parsed?.category
+      if (nombre) return String(nombre)
+    } catch {
+      // no es JSON válido, continuamos
+    }
+  }
+  return str
+}
+
+// ─── Tooltip personalizado ──────────────────────────────────────────────────
+
+function TooltipPersonalizado({
+  active,
+  payload,
   label,
-  unidad = 'items'
-}: { 
+  unidad = 'items',
+}: {
   active?: boolean
   payload?: Array<{ value: number }>
   label?: string
@@ -33,9 +63,11 @@ function TooltipPersonalizado({
 }) {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border border-border/50 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-xl">
-        <p className="text-sm font-medium text-foreground mb-1">{label}</p>
-        <p className="text-2xl font-bold text-foreground">
+      <div className="rounded-xl border border-border/50 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-2xl max-w-[240px]">
+        <p className="text-xs font-medium text-muted-foreground mb-1 leading-snug break-words">
+          {label}
+        </p>
+        <p className="text-2xl font-bold text-foreground tabular-nums">
           {payload[0].value}
           <span className="text-sm font-normal text-muted-foreground ml-1">{unidad}</span>
         </p>
@@ -45,8 +77,51 @@ function TooltipPersonalizado({
   return null
 }
 
+// ─── Custom Y-Axis Tick ─────────────────────────────────────────────────────
+
+interface CustomTickProps {
+  x?: number
+  y?: number
+  payload?: { value: string }
+  maxWidth?: number
+}
+
+function CustomYAxisTick({ x = 0, y = 0, payload, maxWidth = 160 }: CustomTickProps) {
+  if (!payload?.value) return null
+
+  const label = limpiarTipo(payload.value)
+  const truncated = truncar(label, 20)
+  const needsTooltip = label.length > 20
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <title>{needsTooltip ? label : ''}</title>
+      <text
+        x={-8}
+        y={0}
+        dy={4}
+        textAnchor="end"
+        fontSize={11}
+        fontFamily="inherit"
+        fill="var(--muted-foreground)"
+        style={{ cursor: needsTooltip ? 'help' : 'default' }}
+      >
+        {truncated}
+      </text>
+    </g>
+  )
+}
+
+// ─── Componente principal ───────────────────────────────────────────────────
+
 export function Charts({ consultasPorTipo, correosPorDia }: ChartsProps) {
-  // Formatear fecha para mostrar
+  // Limpiar tipos antes de pasarlos al gráfico
+  const consultasLimpias = consultasPorTipo.map((item) => ({
+    ...item,
+    tipoLimpio: limpiarTipo(String(item.tipo)),
+  }))
+
+  // Formatear fecha para el gráfico de área
   const correosPorDiaFormateados = correosPorDia.map((item) => ({
     ...item,
     fechaCorta: new Date(item.fecha).toLocaleDateString('es-ES', {
@@ -55,9 +130,12 @@ export function Charts({ consultasPorTipo, correosPorDia }: ChartsProps) {
     }),
   }))
 
+  // Altura dinámica: mínimo 280px, +32px por cada barra extra sobre 5
+  const alturaBarras = Math.max(280, consultasLimpias.length * 44)
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      {/* Gráfico de Barras - Consultas por Tipo */}
+      {/* ── Gráfico de Barras – Consultas por Tipo ── */}
       <Card className="border-border/50 bg-card">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold text-foreground">
@@ -67,58 +145,76 @@ export function Charts({ consultasPorTipo, correosPorDia }: ChartsProps) {
             Distribución de consultas según categoría
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={consultasPorTipo} 
-                layout="vertical"
-                margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-              >
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.6} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={true}
-                  vertical={false}
-                  stroke="var(--border)"
-                  opacity={0.3}
-                />
-                <XAxis
-                  type="number"
-                  tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  dataKey="tipo"
-                  type="category"
-                  width={130}
-                  tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  content={<TooltipPersonalizado unidad="consultas" />}
-                  cursor={{ fill: 'var(--muted)', opacity: 0.1 }}
-                />
-                <Bar
-                  dataKey="cantidad"
-                  fill="url(#barGradient)"
-                  radius={[0, 6, 6, 0]}
-                  maxBarSize={40}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+        <CardContent className="pr-4">
+          {/* Scroll vertical si hay muchas categorías */}
+          <div
+            className="overflow-y-auto"
+            style={{ maxHeight: 360 }}
+          >
+            <div style={{ height: alturaBarras, minHeight: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={consultasLimpias}
+                  layout="vertical"
+                  margin={{ top: 4, right: 16, bottom: 4, left: 8 }}
+                >
+                  <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.95} />
+                      <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.55} />
+                    </linearGradient>
+                  </defs>
+
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={false}
+                    vertical={true}
+                    stroke="var(--border)"
+                    opacity={0.25}
+                  />
+
+                  {/* Eje X (valores numéricos) */}
+                  <XAxis
+                    type="number"
+                    tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+
+                  {/* Eje Y con tick personalizado que trunca */}
+                  <YAxis
+                    dataKey="tipoLimpio"
+                    type="category"
+                    width={148}
+                    tick={<CustomYAxisTick maxWidth={148} />}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+
+                  <Tooltip
+                    content={
+                      <TooltipPersonalizado
+                        unidad="consultas"
+                      />
+                    }
+                    cursor={{ fill: 'var(--muted)', opacity: 0.08 }}
+                  />
+
+                  <Bar
+                    dataKey="cantidad"
+                    fill="url(#barGradient)"
+                    radius={[0, 6, 6, 0]}
+                    maxBarSize={32}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Gráfico de Área - Flujo de Correos */}
+      {/* ── Gráfico de Área – Flujo de Correos ── */}
       <Card className="border-border/50 bg-card">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold text-foreground">
@@ -131,7 +227,7 @@ export function Charts({ consultasPorTipo, correosPorDia }: ChartsProps) {
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart 
+              <AreaChart
                 data={correosPorDiaFormateados}
                 margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
               >
@@ -142,12 +238,14 @@ export function Charts({ consultasPorTipo, correosPorDia }: ChartsProps) {
                     <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
+
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="var(--border)"
                   opacity={0.3}
                   vertical={false}
                 />
+
                 <XAxis
                   dataKey="fechaCorta"
                   tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
@@ -155,16 +253,24 @@ export function Charts({ consultasPorTipo, correosPorDia }: ChartsProps) {
                   tickLine={false}
                   dy={10}
                 />
+
                 <YAxis
                   tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   dx={-10}
+                  allowDecimals={false}
                 />
+
                 <Tooltip
                   content={<TooltipPersonalizado unidad="correos" />}
-                  cursor={{ stroke: 'var(--chart-2)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  cursor={{
+                    stroke: 'var(--chart-2)',
+                    strokeWidth: 1,
+                    strokeDasharray: '4 4',
+                  }}
                 />
+
                 <Area
                   type="monotone"
                   dataKey="cantidad"
