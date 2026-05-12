@@ -1,9 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
 export const updateSession = async (request: NextRequest) => {
   // Create an unmodified response
   let supabaseResponse = NextResponse.next({
@@ -12,29 +9,41 @@ export const updateSession = async (request: NextRequest) => {
     },
   });
 
-  const supabase = createServerClient(
-    supabaseUrl!,
-    supabaseKey!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  // Skip Supabase session refresh if not configured
+  if (!supabaseUrl || !supabaseKey) {
+    return supabaseResponse;
+  }
+
+  try {
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            supabaseResponse = NextResponse.next({
+              request,
+            })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            )
+          },
         },
       },
-    },
-  );
+    );
 
-  // Refresh session if expired
-  await supabase.auth.getUser()
+    // Refresh session if expired
+    await supabase.auth.getUser()
+  } catch {
+    // Continue without session refresh on error
+  }
 
   return supabaseResponse
 };
