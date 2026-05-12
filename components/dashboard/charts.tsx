@@ -77,20 +77,20 @@ export function Charts({ consultasPorTipo, correosPorDia }: ChartsProps) {
               >
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.6} />
+                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.6} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   horizontal={true}
                   vertical={false}
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   opacity={0.3}
                 />
                 <XAxis
                   type="number"
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -98,13 +98,13 @@ export function Charts({ consultasPorTipo, correosPorDia }: ChartsProps) {
                   dataKey="tipo"
                   type="category"
                   width={130}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <Tooltip
                   content={<TooltipPersonalizado unidad="consultas" />}
-                  cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }}
+                  cursor={{ fill: 'var(--muted)', opacity: 0.1 }}
                 />
                 <Bar
                   dataKey="cantidad"
@@ -137,48 +137,48 @@ export function Charts({ consultasPorTipo, correosPorDia }: ChartsProps) {
               >
                 <defs>
                   <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.4} />
-                    <stop offset="50%" stopColor="hsl(var(--chart-2))" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                    <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.4} />
+                    <stop offset="50%" stopColor="var(--chart-2)" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   opacity={0.3}
                   vertical={false}
                 />
                 <XAxis
                   dataKey="fechaCorta"
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   dy={10}
                 />
                 <YAxis
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   dx={-10}
                 />
                 <Tooltip
                   content={<TooltipPersonalizado unidad="correos" />}
-                  cursor={{ stroke: 'hsl(var(--chart-2))', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  cursor={{ stroke: 'var(--chart-2)', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Area
                   type="monotone"
                   dataKey="cantidad"
-                  stroke="hsl(var(--chart-2))"
+                  stroke="var(--chart-2)"
                   strokeWidth={2.5}
                   fill="url(#areaGradient)"
                   dot={{
                     fill: 'hsl(var(--card))',
-                    stroke: 'hsl(var(--chart-2))',
+                    stroke: 'var(--chart-2)',
                     strokeWidth: 2,
                     r: 4,
                   }}
                   activeDot={{
-                    fill: 'hsl(var(--chart-2))',
+                    fill: 'var(--chart-2)',
                     stroke: 'hsl(var(--card))',
                     strokeWidth: 2,
                     r: 6,

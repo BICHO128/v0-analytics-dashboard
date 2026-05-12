@@ -38,6 +38,41 @@ interface DataTableProps {
   data: CorreoIA[]
 }
 
+function obtenerTextoLegible(valor: string) {
+  const texto = valor.trim()
+
+  if (!texto) {
+    return 'Sin dato'
+  }
+
+  if ((texto.startsWith('{') && texto.endsWith('}')) || (texto.startsWith('[') && texto.endsWith(']'))) {
+    try {
+      const parseado = JSON.parse(texto)
+
+      if (typeof parseado === 'string') {
+        return parseado
+      }
+
+      const candidato =
+        parseado.tipo ??
+        parseado.tipo_consulta ??
+        parseado.consulta ??
+        parseado.categoria ??
+        parseado.nombre ??
+        parseado.seccion_aplicada ??
+        parseado.respuesta_sugerida
+
+      if (typeof candidato === 'string' && candidato.trim()) {
+        return candidato.trim()
+      }
+    } catch {
+      return texto.replace(/\s+/g, ' ')
+    }
+  }
+
+  return texto.replace(/\s+/g, ' ')
+}
+
 // Columnas de la tabla
 const columnas: ColumnDef<CorreoIA>[] = [
   {
@@ -80,8 +115,10 @@ const columnas: ColumnDef<CorreoIA>[] = [
     accessorKey: 'tipo_consulta',
     header: () => <span className="text-muted-foreground">Tipo</span>,
     cell: ({ row }) => (
-      <Badge variant="outline" className="font-normal">
-        {row.getValue('tipo_consulta')}
+      <Badge variant="outline" className="max-w-[220px] font-normal text-foreground">
+        <span className="truncate">
+          {obtenerTextoLegible(row.getValue('tipo_consulta'))}
+        </span>
       </Badge>
     ),
   },
@@ -132,7 +169,7 @@ const columnas: ColumnDef<CorreoIA>[] = [
     header: () => <span className="text-muted-foreground">Sección Aplicada</span>,
     cell: ({ row }) => (
       <span className="text-muted-foreground text-sm">
-        {row.getValue('seccion_aplicada')}
+        {obtenerTextoLegible(row.getValue('seccion_aplicada'))}
       </span>
     ),
   },
@@ -211,14 +248,14 @@ export function DataTable({ data }: DataTableProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border border-border">
+        <div className="overflow-x-auto rounded-md border border-border">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="hover:bg-transparent border-border">
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id} className="bg-muted/50">
+                      <TableHead key={header.id} className="bg-muted/50 text-muted-foreground">
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -240,7 +277,7 @@ export function DataTable({ data }: DataTableProps) {
                     className="border-border"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="align-top">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

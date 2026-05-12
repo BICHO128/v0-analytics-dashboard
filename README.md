@@ -1,35 +1,105 @@
 # v0-analytics-dashboard
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Dashboard de analítica para automatización con n8n, IA y Supabase. El proyecto está basado en Next.js y fue generado con v0.
 
-## Built with v0
+## Tecnologías
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+- Frontend: Next.js 16, React 19, TypeScript, Tailwind CSS.
+- UI: componentes propios en `components/ui` y `components/dashboard`.
+- Datos: Supabase con SDK modular (`@supabase/ssr` y `@supabase/supabase-js`).
+- Gráficas: Recharts.
+- Despliegue: Vercel.
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_Ou0ELULw8WxsZb2uf3VaKJn8mqi0)
+## Base de Datos
 
-## Getting Started
+La estructura de la base vive en [supabase/schema.sql](supabase/schema.sql). El esquema principal es la tabla `correos_ia`, usada por el dashboard y por el webhook de n8n.
 
-First, run the development server:
+## Estructura Principal
+
+- [app/page.tsx](app/page.tsx): ensambla el sidebar y el contenido principal.
+- [app/api/correos/route.ts](app/api/correos/route.ts): expone los correos procesados y calcula métricas.
+- [app/api/webhooks/n8n/route.ts](app/api/webhooks/n8n/route.ts): recibe los datos del flujo de n8n.
+- [components/dashboard](components/dashboard): sidebar, tarjetas, gráficas y tabla.
+- [utils/supabase](utils/supabase): clientes de Supabase para browser, servidor y middleware.
+- [lib/types.ts](lib/types.ts): tipos compartidos del dashboard.
+- [supabase/schema.sql](supabase/schema.sql): SQL de tablas, índices y políticas.
+
+## Variables de Entorno
+
+Copia [.env.example](.env.example) a [.env.local](.env.local) en la raíz del proyecto y completa estas variables si vas a usar Supabase:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+## Instalación y Ejecución
+
+Ruta base del proyecto:
+
+```bash
+D:\PROYECTOS VSCODE\v0-analytics-dashboard
+```
+
+1. Instalar pnpm si no está disponible:
+
+```bash
+npm install -g pnpm
+```
+
+2. Instalar dependencias. Ejecutar en:
+
+```bash
+D:\PROYECTOS VSCODE\v0-analytics-dashboard
+```
+
+```bash
+pnpm install
+```
+
+3. Levantar el entorno local. Ejecutar en:
+
+```bash
+D:\PROYECTOS VSCODE\v0-analytics-dashboard
+```
+
+```bash
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Validar build de producción. Ejecutar en:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+D:\PROYECTOS VSCODE\v0-analytics-dashboard
+```
 
-## Learn More
+```bash
+pnpm build
+```
 
-To learn more, take a look at the following resources:
+5. Ejecutar en modo producción local. Ejecutar en:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+```bash
+D:\PROYECTOS VSCODE\v0-analytics-dashboard
+```
 
-<a href="https://v0.app/chat/api/kiro/clone/BICHO128/v0-analytics-dashboard" alt="Open in Kiro"><img src="https://pdgvvgmkdvyeydso.public.blob.vercel-storage.com/open%20in%20kiro.svg?sanitize=true" /></a>
+```bash
+pnpm start
+```
+
+## Despliegue en Vercel
+
+El proyecto está preparado para desplegarse en Vercel con la cuenta `davidurrutiaceron200507@gmail.com` y el proyecto `v0-analytics-dashboard`.
+
+Pasos recomendados:
+
+1. Conecta el repositorio en Vercel desde la cuenta indicada.
+2. Agrega las variables de entorno de Supabase en el panel del proyecto.
+3. Verifica que el build command sea `pnpm build` y el output corresponda a Next.js.
+4. Despliega la rama principal (`main`).
+
+## Notas
+
+- El proyecto funciona en modo demo si Supabase no está configurado.
+- El bloque de navegación del dashboard está organizado por secciones ancladas en la misma página.
+- La política de pnpm del repositorio permite compilar `sharp`, necesario para el build de Next en este entorno.

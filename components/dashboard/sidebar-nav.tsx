@@ -1,5 +1,7 @@
 'use client'
 
+import * as React from 'react'
+
 import {
   BarChart3,
   Bot,
@@ -27,46 +29,67 @@ import {
 // Elementos del menú principal
 const menuPrincipal = [
   {
+    id: 'panel-principal',
     titulo: 'Panel Principal',
-    url: '#',
     icono: Home,
-    activo: true,
   },
   {
+    id: 'correos-procesados',
     titulo: 'Correos Procesados',
-    url: '#correos',
     icono: Mail,
-    activo: false,
   },
   {
+    id: 'analiticas',
     titulo: 'Analíticas',
-    url: '#analiticas',
     icono: BarChart3,
-    activo: false,
   },
   {
+    id: 'escalamientos',
     titulo: 'Escalamientos',
-    url: '#escalamientos',
     icono: AlertTriangle,
-    activo: false,
   },
 ]
 
 // Elementos del menú secundario
 const menuSecundario = [
   {
+    id: 'rendimiento-ia',
     titulo: 'Rendimiento IA',
-    url: '#rendimiento',
     icono: TrendingUp,
   },
   {
+    id: 'configuracion',
     titulo: 'Configuración',
-    url: '#config',
     icono: Settings,
   },
 ]
 
 export function SidebarNav() {
+  const [seccionActiva, setSeccionActiva] = React.useState('panel-principal')
+
+  React.useEffect(() => {
+    const actualizarSeccionActiva = () => {
+      const hash = window.location.hash.replace('#', '')
+      if (hash) {
+        setSeccionActiva(hash)
+      }
+    }
+
+    actualizarSeccionActiva()
+    window.addEventListener('hashchange', actualizarSeccionActiva)
+
+    return () => window.removeEventListener('hashchange', actualizarSeccionActiva)
+  }, [])
+
+  const navegarASeccion = (seccionId: string) => {
+    const destino = document.getElementById(seccionId)
+
+    setSeccionActiva(seccionId)
+
+    destino?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    window.history.replaceState(null, '', `#${seccionId}`)
+  }
+
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="p-4">
@@ -95,14 +118,13 @@ export function SidebarNav() {
               {menuPrincipal.map((item) => (
                 <SidebarMenuItem key={item.titulo}>
                   <SidebarMenuButton
-                    asChild
-                    isActive={item.activo}
+                    isActive={seccionActiva === item.id}
                     tooltip={item.titulo}
+                    onClick={() => navegarASeccion(item.id)}
+                    type="button"
                   >
-                    <a href={item.url}>
-                      <item.icono className="h-4 w-4" />
-                      <span>{item.titulo}</span>
-                    </a>
+                    <item.icono className="h-4 w-4" />
+                    <span>{item.titulo}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -118,11 +140,14 @@ export function SidebarNav() {
             <SidebarMenu>
               {menuSecundario.map((item) => (
                 <SidebarMenuItem key={item.titulo}>
-                  <SidebarMenuButton asChild tooltip={item.titulo}>
-                    <a href={item.url}>
-                      <item.icono className="h-4 w-4" />
-                      <span>{item.titulo}</span>
-                    </a>
+                  <SidebarMenuButton
+                    tooltip={item.titulo}
+                    onClick={() => navegarASeccion(item.id)}
+                    isActive={seccionActiva === item.id}
+                    type="button"
+                  >
+                    <item.icono className="h-4 w-4" />
+                    <span>{item.titulo}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
